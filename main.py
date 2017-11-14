@@ -1,63 +1,37 @@
 '''
-Created on Apr 28, 2015
+Created on 11/14/17
 
-@author: Saul Castro
-Cs332L Spring 2015 
-Final Project
+pypong prootype
 
-Game class
 
 Start fuction contains Main loop, 
 game settings, controls 
 
-todo
-Level file format
-stats class
-options
-controller + setup
-sound effects
 
 '''
 
 
 import pygame, sys 
-from stats import Stats
 from user import User
-from alien import *
-from bullet import Bullet, AlienBullet
-from level import Level, levelItem, levelMaker
-from powerup import *
-from mySounds import *
+from ball import Ball
 import random
 
 
 
 class Game:
-    LOST = -1
-    WON = 1
+   
     active = True
-    
-    gamesounds = 0
-    soundOn = True
-#     sound ids
-    boomSound = 0
-    laserSound = 1
-    reloadSound = 2
-    upSound = 3
-    missleSound = 4
-    mainGunSound = 5
-    blasterSound = 6 
-    
-    
     width = 800
     height = 800
-    fullscreen = True
+    fullscreen = False
     padding = 100
     currentLevel = 1
     timerEvent =  19
-    fireEvent = 14
+    turn = 0
     
+    ball = 0
     user = 0
+    user2  = 0
     stats = 0
     keys = []
     controllerMap = []
@@ -80,17 +54,13 @@ class Game:
             Game.height = pygame.display.Info().current_h
        
         Game.surface = pygame.display.set_mode([Game.width, Game.height])
-        pygame.display.set_caption('Final Project')
+        pygame.display.set_caption('Py Pong')
         
+         
+        # Game.background_image =  pygame.Surface([Game.width, Game.height])
+        # Game.background_image.fill(pygame.Color(0,20,100))
         
-        Game.bg.append(  pygame.image.load("./res/bg2k.jpg").convert() )
-        Game.bg.append(  pygame.image.load("./res/bge.jpg").convert() )
-#         Game.bg.append(  pygame.image.load("./res/bgm.jpg").convert() )
-        
-        
-        Game.background_image = Game.bg[0]
-        
-        self.resetBg()
+        # 
         
         # Initialize the joysticks
         pygame.joystick.init()
@@ -101,7 +71,7 @@ class Game:
         self.setupKeys()
         Game.controller  = self.setupController()
       
-        Game.gamesounds = MySound()
+        # Game.gamesounds = MySound()
   
         self.splash()
             
@@ -135,8 +105,9 @@ class Game:
         
     def splash(self):
       
-        Game.surface.blit(Game.background_image, [0, Game.bgh])
-        self.printText("Name goes here", size=100)
+        # Game.surface.blit(Game.background_image, [0, Game.bgh])
+        Game.surface.fill(pygame.Color(0, 0, 0))
+        self.printText("PyPong", size=60)
         pygame.display.update()
         while True:
                  #event check
@@ -150,13 +121,7 @@ class Game:
                 
            
         
-    def resetBg(self):
-        Game.bgh = -Game.background_image.get_height() + Game.height 
-        
-    def shiftBg(self, shift):
-        Game.bgh += shift
-        print( Game.bgh)
-        
+     
     def createEframes(self):  
         sprite_sheet = pygame.image.load("./res/SkybusterExplosion.jpg").convert()
         w = 170
@@ -230,8 +195,8 @@ class Game:
                  
                         
                 
-#             Game.surface.fill(black)
-            Game.surface.blit(Game.background_image, [0, Game.bgh])
+            Game.surface.fill(black)
+            # Game.surface.blit(Game.background_image, [0, Game.bgh])
            
             for i in range(0, len(text)):       
                 f = pygame.font.get_default_font()
@@ -267,8 +232,14 @@ class Game:
         
         #reset the user
         if Game.user == 0:
-            Game.user = User(x=500, y=600)
+            Game.user = User(0)
             Game.user.setEframe(Game.eFrames)
+        if Game.user2 == 0:
+            Game.user2 = User(1)
+            Game.user2.setEframe(Game.eFrames)
+        if Game.ball == 0:
+            Game.ball = Ball(int(Game.turn%2))
+            Game.ball.setEframe(Game.eFrames)
             
 #         user = Game.user
 #         players.append(user)
@@ -277,24 +248,14 @@ class Game:
 
         items = pygame.sprite.Group()  
         items.add(Game.user)
-        alienList = pygame.sprite.Group()
-        bulletList = pygame.sprite.Group()
-        alienBulletList = pygame.sprite.Group()
-        powerUpList = pygame.sprite.Group()
+        items.add(Game.user2)
+        items.add(Game.ball)
         
-        if Game.stats == 0:
-            Game.stats = Stats(Game.width, Game.height)
-        items.add(Game.stats)
+        # if Game.stats == 0:
+        #     Game.stats = Stats(Game.width, Game.height)
+        # items.add(Game.stats)
             
-             
-#         currentLevel = 1
-#         level = Level(Game.stats.level)
-        LevelLength = Game.LevelLength
-#         LevelLength = level.getLength()
-        if Game.bgh + LevelLength >= Game.padding :
-            self.resetBg()
-        levelPos = 0
-
+          
        
           
         pygame.font.init()
@@ -312,15 +273,11 @@ class Game:
                 if _m == 1: Game.isPaused = False
                 elif _m == 3: pygame.quit()
                     
-            Game.surface.blit(Game.background_image, [0, Game.bgh + levelPos])
-            label = myfont.render(Game.stats.getStatsString(), True, white)
-            Game.surface.blit(label, (Game.padding, 10))
+            # Game.surface.blit(Game.background_image, [0, 0])
+            Game.surface.fill(pygame.Color(0,0,0))
+            # label = myfont.render(Game.stats.getStatsString(), True, white)
+            # Game.surface.blit(label, (Game.padding, 10))
             
-            if levelPos< 50: 
-                self.printText("Hope you are ready...")
-            elif levelPos< 100: 
-                self.printText("Here they come!")
-    #         surface.fill(black)
     
             #event check
             for event in pygame.event.get():
@@ -363,173 +320,36 @@ class Game:
                     pygame.time.set_timer(Game.timerEvent, 0)
                     print('timer fired')
                     return Game.LOST
-                
-            #main weapon continuous firing
-            if Game.user.firing and Game.user.tryFire(0):
-                b = Game.user.fire(0)
-                bulletList.add(b)
-                items.add(b)
-                Game.stats.shot(0)
-                if Game.soundOn: Game.gamesounds.playSound(Game.mainGunSound)
-            
-            # check if i shot anything     
-            for b in bulletList:      
-                if b.rect.y < -100:        #remove bullets when they go off screen
-                    bulletList.remove(b)
-                    items.remove(b)  
-                hitList = pygame.sprite.spritecollide(b, alienList, False)
-                for et in hitList:
-                    if not et.hit(b.power):
-                        et.bang()
-                        if Game.soundOn: Game.gamesounds.playSound(Game.boomSound)
-                        alienList.remove(et)
-                        Game.stats.killed()
-                        
-                        #Add power ups after some kills
-                        if Game.stats.kills % 10*Game.currentLevel == 0:
-                            p = PowerUps(et.getCenter()[0], et.getCenter()[1], 0)
-                            powerUpList.add(p)
-                            items.add(p)
-#                         alienList.remove(et)
-#                         items.remove(et)     
-    #                     if type(et) is CommandShip:
-    #                         user.addDrones(et.drones)
-    
-                        bulletList.remove(b)
-                        items.remove(b)  
-                        Game.stats.hit()
-                        
-                     #bullet to bullet hits
-                hitList = pygame.sprite.spritecollide(b, alienBulletList, False)
-                for et in hitList:
-                    #if not et.hit(b.power):
-                        #et.bang()
-                        if Game.soundOn: Game.gamesounds.playSound(Game.boomSound)
-                        et.kill()
-                        bulletList.remove(b)
-                        items.remove(b)  
-                   # Game.stats.hit()
-                    
-            #check if they shot me
-            hitList = pygame.sprite.spritecollide(Game.user, alienBulletList, False)
-            for b in hitList:
-                if pygame.sprite.collide_circle(b, Game.user):
-                   
-                    Game.stats.gotShot(b.power)
-                    alienBulletList.remove(b)
-                    items.remove(b)
-            
-            #check if I crash
-            hitList = pygame.sprite.spritecollide(Game.user, alienList, False)
+          
+            #check the ball hits
+            #only need to check when the users hit the ball
+            #wall bounce should be within ball update func
+            ball = Game.ball
+            hitList = pygame.sprite.spritecollide(ball, items, False)
             for a in hitList:
                 if pygame.sprite.collide_circle(a, Game.user):
-                    Game.stats.crashed(a.power)
-                    alienList.remove(a)
-                    a.bang()
-                    if Game.soundOn: Game.gamesounds.playSound(Game.boomSound)
-            
-              #check if get a power up!
-            hitList = pygame.sprite.spritecollide(Game.user, powerUpList, False)
-            for p in hitList:
-                if pygame.sprite.collide_circle(p, Game.user):
-                    Game.stats.powerup(p)
-                    p.kill()
-                    if Game.soundOn: Game.gamesounds.playSound(Game.reloadSound)
-            
-            #try to fire
-            for a in alienList:
-                if a.tryFire():
-                    b = a.fire()
-                    alienBulletList.add(b)
-                    items.add(b)
-                    if Game.soundOn: Game.gamesounds.playSound(Game.laserSound)
-            
-        
+                    # Game.stats.crashed(a.power)
+                    print("ball hit")
+                   
                     
             items.update()
             items.draw(Game.surface)  
-            levelPos += 2
+            levelPos += 1
     #         print( pos )
-    
-    
-         #add aliens  based on my position and current level
-            item = self.makeItem(LevelLength, levelPos)
-            if not item == 0:
-                alienList.add( item )
-                items.add( item )
-                
-                
-                
-#             #add aliens when they are near my position
-#             if level.peek() != 0 and levelPos >= level.peek().y:
-#                 item = self.makeItem(level.next(), levelPos)
-#                 alienList.add( item )
-#                 items.add( item )
-           
-
-
-            #check if i won the level
-            if levelPos > LevelLength:
-                self.shiftBg(levelPos)
-                 
-                return Game.WON
-            elif levelPos > LevelLength-Game.padding:
-                self.printText("Level up! Score:" + str(Game.stats.score))
-               
-               
+        
             #check if i'm dead
-            if Game.stats.power <= 0 and Game.active:
-#                 print('you lose no power')
-                self.printText("You died...", 30) # Ships Remaining: " + str(Game.stats.lives))
-                if Game.active: #make sure to set timer only once
-                    Game.active = False
-                    Game.user.bang()
-                    pygame.time.set_timer(Game.timerEvent, 1500)
+#             if Game.stats.power <= 0 and Game.active:
+# #                 print('you lose no power')
+#                 self.printText("You died...", 30) # Ships Remaining: " + str(Game.stats.lives))
+#                 if Game.active: #make sure to set timer only once
+#                     Game.active = False
+#                     Game.user.bang()
+#                     pygame.time.set_timer(Game.timerEvent, 1500)
 
      
                 
             pygame.display.update()
             fpsClock.tick(FPS)
-    
-    
-    def makeItem(self,ll, pos):
-            if pos % (10*(10 - Game.currentLevel))  != 0 or pos/ll > .7: return 0
-            
-         
-            aliens = []
-            p = Game.padding
-            x =  random.randint(2, Game.width//(p*2)-2)
-            print('x : ' + str(x) )
-            x *= p*2
-            howMany =  random.randint(1, Game.currentLevel + 1)
-            width =  random.randint(1, 4)
-            rows = howMany // width
-            mh = Game.height//4
-            print('adding ' + str(howMany) + 'Item(s) in ' + str(width) + ' Cols')
-            for k in range(rows):
-                t =  random.randint(1, 4)
-                for j in range(width):
-                    y = -p - (k + 1) * (p)
-                    #y = 100
-                    if t == 1:
-                        a = Alien(x + j * p, y , mh)
-                    elif t == 2:
-                        a = CommandShip(x+ j * p, y, mh, drones=0)
-#                         for d in range(a.droneCount):
-#                             print("drone added")
-#                             b = Drone(a.getCenter(), n=d, count=a.droneCount) 
-#                             a.drones.add(b)
-#                             b.setEframe(Game.eFrames)
-#                             aliens.append( b )
-                    elif t == 3:
-                        a = Three(x+ j * p, y, mh)
-                    elif t == 4:
-                        a = Star(x+ j *p, y, mh)
-                    else: a = Alien(x+ j * p, y, mh)
-                    
-                    a.setEframe(Game.eFrames)
-                    aliens.append( a )
-            return aliens
     
     
     

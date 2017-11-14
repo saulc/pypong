@@ -4,13 +4,14 @@ Created on Apr 28, 2015
 @author: saul
 '''
 import pygame
+     
 
 class Item(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__();
 
         self.image = pygame.Surface([50, 50])
-        self.image = pygame.image.load("./res/bullet.png").convert_alpha()
+        self.image = pygame.image.load("./res/a1.png").convert_alpha()
         # self.image.fill(pygame.Color(0,200,100))
  
         self.rect = self.image.get_rect()

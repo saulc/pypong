@@ -7,24 +7,20 @@ user class for controllable item
 '''
 import pygame
 from item import Item
-from bullet import *
 
 class User(Item):
-    def __init__(self, x, y):
-        super().__init__(x, y)
+    def __init__(self, i):
+        super().__init__(20, 100)
         images =[]
-        i = pygame.image.load("./res/user.png").convert_alpha()
-        images.append(i)
-        i = pygame.image.load("./res/userRight.png").convert_alpha()
-        images.append(i)
-        i = pygame.transform.flip(i, True, False)
+        self.id = i
+        i = self.image.fill(pygame.Color(0,20,100))
         images.append(i)
         self.images = images
         self.image = images[0]
-        self.rect = self.image.get_rect()
-        self.rect.x = x
-        self.rect.y = y
-        self.radius = self.image.get_width()//2
+        # self.rect = self.image.get_rect()
+        self.rect.x = 0
+        self.rect.y =  400
+        # self.radius = self.image.get_width()//2
         self.topSpeed = 25
         self.acc = 1
         self.gunzero = 1
